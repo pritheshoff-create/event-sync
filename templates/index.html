@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EventOS | Secure Ticketing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-[#0B0F19] text-gray-300 font-sans min-h-screen antialiased">
+    
+    <nav class="bg-white/5 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-xl font-semibold text-white flex items-center gap-2">
+            <div class="w-6 h-6 rounded bg-indigo-500 flex items-center justify-center text-xs">E</div>
+            Event<span class="text-indigo-400">OS</span>
+        </h1>
+        <select id="roleSelector" onchange="toggleRoles()" class="bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 rounded-lg px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            <option value="attendee">👤 View as: Attendee</option>
+            <option value="organizer">⚙️ View as: Organizer</option>
+        </select>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-6 mt-4">
+        
+        <!-- ATTENDEE VIEW -->
+        <div id="attendeeView" class="max-w-md mx-auto w-full transition-all duration-300">
+            <section class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl text-center">
+                <h2 class="text-2xl font-bold text-white mb-2">Get Your Pass</h2>
+                <p class="text-gray-400 text-sm mb-6">Select an active event below to register.</p>
+                
+                <select id="regEventSelect" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 mb-6 text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">Loading events...</option>
+                </select>
+                
+                <button onclick="registerUser()" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white py-3 rounded-lg font-bold shadow-lg transition-transform active:scale-95">
+                    Register Now
+                </button>
+                
+                <div id="qrContainer" class="mt-8 flex flex-col items-center hidden">
+                    <div class="bg-white p-4 rounded-xl shadow-inner"><div id="qrCode"></div></div>
+                    <span class="text-xs text-emerald-400 mt-4 font-mono bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20" id="qrText"></span>
+                </div>
+            </section>
+        </div>
+
+        <!-- ORGANIZER VIEW -->
+        <div id="organizerView" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300">
+            
+            <div class="space-y-6">
+                <!-- Create Event -->
+                <section class="bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl">
+                    <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">📅 Create New Event</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="eventName" placeholder="Event Name (e.g. TechCon 2026)" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-emerald-500 focus:outline-none">
+                        <div class="flex gap-3">
+                            <input type="date" id="eventDate" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-400 focus:border-emerald-500 focus:outline-none">
+                            <input type="number" id="eventCap" placeholder="Capacity" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <button onclick="createNewEvent()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium transition active:scale-95">Launch Event</button>
+                    </div>
+                </section>
+
+                <!-- Live Dashboard -->
+                <section class="bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-medium text-white">Live Control Center</h2>
+                        <span class="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-1 rounded uppercase font-bold animate-pulse">Live</span>
+                    </div>
+                    
+                    <label class="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Monitoring Target:</label>
+                    <select id="dashEventSelect" onchange="fetchLiveStats()" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mb-6 text-white focus:outline-none focus:border-purple-500">
+                        <option value="">Loading events...</option>
+                    </select>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
+                            <p class="text-3xl font-bold text-white" id="statReg">-</p>
+                            <p class="text-xs text-gray-400 mt-1">Total Registered</p>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-emerald-500/20 text-center shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                            <p class="text-3xl font-bold text-emerald-400" id="statCheck">-</p>
+                            <p class="text-xs text-gray-400 mt-1">Checked In</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="exportCSV()" class="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 rounded-lg text-sm font-medium transition flex justify-center items-center gap-2">
+                        ⬇️ Download Check-in CSV
+                    </button>
+                </section>
+            </div>
+
+            <!-- Scanner -->
+            <section class="bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col h-full">
+                <h2 class="text-lg font-medium text-white mb-2">📷 Entry Checkpoint</h2>
+                <p class="text-xs text-gray-400 mb-4">Scans apply to the event selected in the Control Center.</p>
+                
+                <div id="reader" class="w-full bg-black/40 rounded-xl overflow-hidden aspect-square mb-6 border border-white/5"></div>
+                
+                <div class="mt-auto">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Manual Token Verification</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="manualScanInput" placeholder="Paste token ID..." class="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <button onclick="processScan(document.getElementById('manualScanInput').value)" class="bg-indigo-600 hover:bg-indigo-500 px-4 rounded-lg text-sm font-medium transition active:scale-95">Verify</button>
+                    </div>
+                    <div id="scanMsg" class="mt-4 font-medium text-center text-sm h-6"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const getHeaders = () => ({ 'Content-Type': 'application/json', 'X-Role': document.getElementById('roleSelector').value });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadEvents();
+            initScannerSafe();
+        });
+
+        async function loadEvents(autoSelectId = null) {
+            try {
+                const res = await fetch(window.location.origin + '/events?t=' + Date.now());
+                const events = await res.json();
+                
+                const regDropdown = document.getElementById('regEventSelect');
+                const dashDropdown = document.getElementById('dashEventSelect');
+                
+                if (!events || events.length === 0) return;
+
+                const options = events.map(e => `<option value="${e.id}">${e.name} (Cap: ${e.capacity})</option>`).join('');
+                
+                regDropdown.innerHTML = options;
+                dashDropdown.innerHTML = options;
+
+                if (autoSelectId) {
+                    regDropdown.value = autoSelectId.toString();
+                    dashDropdown.value = autoSelectId.toString();
+                } else if (events.length > 0 && !regDropdown.value) {
+                    regDropdown.value = events[0].id.toString();
+                    dashDropdown.value = events[0].id.toString();
+                }
+                
+                fetchLiveStats();
+            } catch (err) {
+                console.error("Failed to load events:", err);
+            }
+        }
+
+        function toggleRoles() {
+            const role = document.getElementById('roleSelector').value;
+            document.getElementById('attendeeView').classList.toggle('hidden', role !== 'attendee');
+            document.getElementById('organizerView').classList.toggle('hidden', role !== 'organizer');
+            if(role === 'organizer') fetchLiveStats();
+        }
+
+        async function createNewEvent() {
+            const nameInput = document.getElementById('eventName').value;
+            const dateInput = document.getElementById('eventDate').value || new Date().toISOString().split('T')[0];
+            const capInput = document.getElementById('eventCap').value;
+            
+            if(!nameInput || !capInput) return alert("Please fill out event name and capacity.");
+            
+            const payload = { name: nameInput, date: dateInput, capacity: parseInt(capInput) };
+            
+            try {
+                const res = await fetch(window.location.origin + '/create_event', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'X-Role': 'organizer' }, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                const data = await res.json();
+                
+                if(res.ok) {
+                    document.getElementById('eventName').value = '';
+                    document.getElementById('eventCap').value = '';
+                    document.getElementById('eventDate').value = '';
+                    
+                    await loadEvents(data.event_id); 
+                    alert(`Success! Event "${nameInput}" created and synchronized.`);
+                } else {
+                    alert("Server Error: " + (data.description || data.error || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Network error: Could not connect to Flask backend.");
+                console.error(err);
+            }
+        }
+
+        async function registerUser() {
+            const eventId = document.getElementById('regEventSelect').value;
+            if(!eventId) return alert("Please select a valid event.");
+            
+            const res = await fetch(window.location.origin + '/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({event_id: eventId}) });
+            const data = await res.json();
+            
+            if(data.qr_token) {
+                document.getElementById('qrContainer').classList.remove('hidden');
+                document.getElementById('qrCode').innerHTML = ""; 
+                new QRCode(document.getElementById('qrCode'), { text: data.qr_token, width: 160, height: 160, colorDark: "#000000", colorLight: "#ffffff" });
+                document.getElementById('qrText').innerText = data.qr_token;
+                loadEvents(eventId);
+            } else {
+                alert(data.error || "Registration failed.");
+            }
+        }
+
+        async function fetchLiveStats() {
+            const eventId = document.getElementById('dashEventSelect').value;
+            if(!eventId || document.getElementById('roleSelector').value !== 'organizer') return;
+            
+            const res = await fetch(window.location.origin + `/live_stats/${eventId}`);
+            if(res.status === 200) {
+                const data = await res.json();
+                document.getElementById('statReg').innerText = `${data.registered} / ${data.capacity}`;
+                document.getElementById('statCheck').innerText = data.checked_in;
+            }
+        }
+        setInterval(fetchLiveStats, 3000);
+
+        async function processScan(token) {
+            if(!token) return;
+            const res = await fetch(window.location.origin + '/scan', { method: 'POST', headers: getHeaders(), body: JSON.stringify({qr_token: token}) });
+            const data = await res.json();
+            const msgBox = document.getElementById('scanMsg');
+            
+            if(res.status === 200) { msgBox.className = "mt-4 font-semibold text-emerald-400 bg-emerald-400/10 py-1 rounded text-center"; msgBox.innerText = `✅ ${data.success}`; }
+            else if(res.status === 409) { msgBox.className = "mt-4 font-semibold text-amber-400 bg-amber-400/10 py-1 rounded text-center"; msgBox.innerText = `⚠️ ${data.error}`; }
+            else { msgBox.className = "mt-4 font-semibold text-red-400 bg-red-400/10 py-1 rounded text-center"; msgBox.innerText = `❌ ${data.error || 'Access Denied'}`; }
+            
+            setTimeout(() => { msgBox.innerText = ""; document.getElementById('manualScanInput').value = ""; }, 3000);
+            fetchLiveStats();
+        }
+
+        function exportCSV() {
+            const eventId = document.getElementById('dashEventSelect').value;
+            if(!eventId) return alert("Select an event first.");
+            fetch(window.location.origin + `/export/${eventId}`, { headers: getHeaders() }).then(res => {
+                if(res.status === 403) throw new Error("Access Denied");
+                return res.blob();
+            }).then(blob => {
+                const a = document.createElement('a'); a.href = window.URL.createObjectURL(blob);
+                a.download = `event_export_${eventId}.csv`; document.body.appendChild(a); a.click(); a.remove();
+            }).catch(err => alert(err.message));
+        }
+
+        // Safe Scanner Initialization to prevent thread freezes
+        let scanner;
+        function initScannerSafe() {
+            try {
+                scanner = new Html5QrcodeScanner("reader", { fps: 5, qrbox: 200 }, false);
+                scanner.render(async (decodedText) => {
+                    processScan(decodedText);
+                }, () => {});
+            } catch(e) {
+                console.log("Camera hardware unavailable, using manual override fallback.");
+            }
+        }
+    </script>
+</body>
+</html>
