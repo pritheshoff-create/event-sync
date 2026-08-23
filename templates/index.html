@@ -1,303 +1,2150 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>EventOS | Secure Ticketing & Intelligence</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-</head>
-<body class="bg-[#0B0F19] text-gray-300 font-sans min-h-screen antialiased">
-    
-    <nav class="bg-white/5 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <h1 class="text-xl font-semibold text-white flex items-center gap-2">
-            <div class="w-6 h-6 rounded bg-indigo-500 flex items-center justify-center text-xs text-white font-bold">E</div>
-            Event<span class="text-indigo-400">OS</span>
-        </h1>
-        <select id="roleSelector" onchange="toggleRoles()" class="bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 rounded-lg px-4 py-2 font-medium focus:outline-none">
-            <option value="attendee">👤 View as: Attendee</option>
-            <option value="organizer">⚙️ View as: Organizer</option>
-        </select>
-    </nav>
 
-    <main class="max-w-6xl mx-auto p-6 mt-4">
-        
-        <!-- ATTENDEE VIEW -->
-        <div id="attendeeView" class="max-w-md mx-auto w-full transition-all duration-300">
-            <section class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl text-center">
-                <h2 class="text-2xl font-bold text-white mb-2">Get Your Pass</h2>
-                <p class="text-gray-400 text-sm mb-6">Select an active event below to register.</p>
-                
-                <select id="regEventSelect" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 mb-6 text-white focus:outline-none">
-                    <option value="">Loading events...</option>
-                </select>
-                
-                <button onclick="registerAttendee()" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 text-white py-3 rounded-lg font-bold shadow-lg transition active:scale-95">
-                    Register Now
-                </button>
-                
-                <div id="qrContainer" class="mt-8 flex flex-col items-center hidden">
-                    <div class="bg-white p-4 rounded-xl shadow-inner"><div id="qrCode"></div></div>
-                    <span class="text-xs text-emerald-400 mt-4 font-mono bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20" id="qrText"></span>
-                </div>
-            </section>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        EventOS | Secure Ticketing
+    </title>
+
+
+    <!-- Tailwind -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+    <!-- QR Scanner -->
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+
+    <!-- QR Generator -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+</head>
+
+
+<body
+    class="bg-[#0B0F19] text-gray-300 font-sans min-h-screen antialiased"
+>
+
+
+<!-- ================================================================
+     NAVBAR
+================================================================ -->
+
+<nav
+    class="bg-white/5 backdrop-blur-md border-b
+           border-white/10 px-6 py-4 flex justify-between
+           items-center sticky top-0 z-50"
+>
+
+
+    <h1
+        class="text-xl font-semibold text-white
+               flex items-center gap-2"
+    >
+
+        <div
+            class="w-6 h-6 rounded bg-indigo-500
+                   flex items-center justify-center text-xs"
+        >
+            E
         </div>
 
-        <!-- ORGANIZER VIEW -->
-        <div id="organizerView" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-300">
-            
-            <div class="space-y-6">
-                <section class="bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl">
-                    <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">📅 Create Event</h2>
-                    <div class="space-y-3">
-                        <input type="text" id="eventName" placeholder="Event Name" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none">
-                        <div class="flex gap-2">
-                            <input type="date" id="eventDate" class="w-full bg-black/20 border border-white/10 rounded-lg px-2 py-2 text-xs text-gray-400 focus:outline-none">
-                            <input type="number" id="eventCap" placeholder="Cap" class="w-24 bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
-                        </div>
-                        <button onclick="createNewEvent()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium transition active:scale-95">Launch Event</button>
-                    </div>
-                </section>
 
-                <section class="bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-medium text-white">Live Control</h2>
-                        <span class="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-1 rounded uppercase font-bold animate-pulse">Live</span>
-                    </div>
-                    
-                    <label class="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Active Target:</label>
-                    <select id="dashEventSelect" onchange="fetchLiveStats()" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mb-4 text-white focus:outline-none">
-                        <option value="">Loading...</option>
-                    </select>
-                    
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <div class="bg-black/30 p-3 rounded-xl border border-white/5 text-center">
-                            <p class="text-2xl font-bold text-white" id="statReg">-</p>
-                            <p class="text-[10px] text-gray-400 mt-1">Registered</p>
-                        </div>
-                        <div class="bg-black/30 p-3 rounded-xl border border-emerald-500/20 text-center">
-                            <p class="text-2xl font-bold text-emerald-400" id="statCheck">-</p>
-                            <p class="text-[10px] text-gray-400 mt-1">Checked In</p>
-                        </div>
-                    </div>
-                    
-                    <button onclick="exportCSV()" class="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 rounded-lg text-xs font-medium transition">
-                        ⬇️ Export Check-in CSV
-                    </button>
-                </section>
+        Event<span class="text-indigo-400">
+            OS
+        </span>
+
+    </h1>
+
+
+    <!-- Role Selector -->
+
+    <select
+        id="roleSelector"
+        onchange="toggleRoles()"
+
+        class="bg-indigo-600/20 text-indigo-300
+               border border-indigo-500/30 rounded-lg
+               px-4 py-2 font-medium
+               focus:outline-none
+               focus:ring-2 focus:ring-indigo-500
+               transition"
+    >
+
+        <option value="attendee">
+            👤 View as: Attendee
+        </option>
+
+        <option value="organizer">
+            ⚙️ View as: Organizer
+        </option>
+
+    </select>
+
+</nav>
+
+
+
+<!-- ================================================================
+     MAIN
+================================================================ -->
+
+<main
+    class="max-w-5xl mx-auto p-6 mt-4"
+>
+
+
+<!-- ================================================================
+     ATTENDEE VIEW
+================================================================ -->
+
+<div
+    id="attendeeView"
+    class="max-w-md mx-auto w-full
+           transition-all duration-300"
+>
+
+
+    <section
+        class="bg-white/5 backdrop-blur-xl
+               border border-white/10 p-8
+               rounded-2xl shadow-2xl text-center"
+    >
+
+
+        <h2
+            class="text-2xl font-bold text-white mb-2"
+        >
+            Get Your Pass
+        </h2>
+
+
+        <p
+            class="text-gray-400 text-sm mb-6"
+        >
+            Select an active event below to register.
+        </p>
+
+
+        <!-- Event selector -->
+
+        <select
+            id="regEventSelect"
+
+            class="w-full bg-black/40
+                   border border-white/10
+                   rounded-lg px-4 py-3 mb-6
+                   text-white focus:outline-none
+                   focus:border-indigo-500"
+        >
+
+            <option value="">
+                Loading events...
+            </option>
+
+        </select>
+
+
+        <!-- Register -->
+
+        <button
+            onclick="registerUser()"
+
+            class="w-full bg-gradient-to-r
+                   from-indigo-600 to-blue-600
+                   hover:from-indigo-500
+                   hover:to-blue-500
+                   text-white py-3 rounded-lg
+                   font-bold shadow-lg
+                   transition-transform
+                   active:scale-95"
+        >
+
+            Register Now
+
+        </button>
+
+
+        <!-- QR -->
+
+        <div
+            id="qrContainer"
+
+            class="mt-8 flex flex-col
+                   items-center hidden"
+        >
+
+            <div
+                class="bg-white p-4
+                       rounded-xl shadow-inner"
+            >
+
+                <div id="qrCode"></div>
+
             </div>
 
-            <section class="bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
-                <div>
-                    <h2 class="text-lg font-medium text-white mb-2">📷 Scanner Desk</h2>
-                    <p class="text-xs text-gray-400 mb-4">Active target synchronization enabled.</p>
-                    <div id="reader" class="w-full bg-black/40 rounded-xl overflow-hidden aspect-square mb-4 border border-white/5"></div>
-                </div>
-                <div>
-                    <div class="flex gap-2">
-                        <input type="text" id="manualScanInput" placeholder="Paste token ID..." class="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
-                        <button onclick="processScan(document.getElementById('manualScanInput').value)" class="bg-indigo-600 hover:bg-indigo-500 px-3 rounded-lg text-xs font-medium">Verify</button>
-                    </div>
-                    <div id="scanMsg" class="mt-2 font-medium text-center text-xs h-6"></div>
-                </div>
-            </section>
 
-            <section class="bg-white/5 border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-6 h-6 rounded bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">✨</div>
-                        <h2 class="text-lg font-medium text-white">AI Insights</h2>
-                    </div>
-                    <p class="text-xs text-gray-400 mb-4">Real-time LLM-driven event telemetry and arrival pacing.</p>
-                    
-                    <button onclick="fetchAIInsights()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white py-2.5 rounded-lg text-xs font-bold shadow-lg mb-4 transition">
-                        Analyze Data
-                    </button>
+            <span
+                id="qrText"
 
-                    <div id="aiOutputBox" class="bg-black/40 border border-white/10 p-4 rounded-xl text-xs text-gray-300 h-52 overflow-y-auto leading-relaxed">
-                        Awaiting query... Click analyze to generate live event recommendations.
-                    </div>
-                </div>
-                <div class="text-[10px] text-gray-500 text-center mt-4">Powered by EventOS Intelligence Engine</div>
-            </section>
+                class="text-xs text-emerald-400
+                       mt-4 font-mono
+                       bg-emerald-400/10
+                       px-3 py-1 rounded-full
+                       border border-emerald-400/20
+                       break-all"
+            ></span>
+
         </div>
-    </main>
 
-    <script>
-        const getHeaders = () => ({ 'Content-Type': 'application/json', 'X-Role': document.getElementById('roleSelector').value });
+    </section>
 
-        document.addEventListener("DOMContentLoaded", () => {
-            loadEvents();
-            initScannerSafe();
-        });
+</div>
 
-        async function loadEvents(autoSelectId = null) {
-            try {
-                const res = await fetch(window.location.origin + '/events?t=' + Date.now());
-                const events = await res.json();
-                
-                const regDropdown = document.getElementById('regEventSelect');
-                const dashDropdown = document.getElementById('dashEventSelect');
-                
-                if (!events || events.length === 0) return;
 
-                const options = events.map(e => `<option value="${e.id}">${e.name} (Cap: ${e.capacity})</option>`).join('');
-                
-                regDropdown.innerHTML = options;
-                dashDropdown.innerHTML = options;
 
-                if (autoSelectId) {
-                    regDropdown.value = autoSelectId.toString();
-                    dashDropdown.value = autoSelectId.toString();
-                } else if (events.length > 0) {
-                    if(!regDropdown.value) regDropdown.value = events[0].id.toString();
-                    if(!dashDropdown.value) dashDropdown.value = events[0].id.toString();
+<!-- ================================================================
+     ORGANIZER VIEW
+================================================================ -->
+
+<div
+    id="organizerView"
+
+    class="hidden grid grid-cols-1
+           md:grid-cols-2 gap-6
+           transition-all duration-300"
+>
+
+
+    <!-- ============================================================
+         LEFT SIDE
+    ============================================================ -->
+
+    <div class="space-y-6">
+
+
+        <!-- ========================================================
+             LOGIN
+        ======================================================== -->
+
+        <section
+            id="loginSection"
+
+            class="bg-white/5
+                   border border-white/10
+                   p-6 rounded-2xl
+                   shadow-xl"
+        >
+
+
+            <h2
+                class="text-lg font-medium
+                       text-white mb-4"
+            >
+                🔐 Organizer Login
+            </h2>
+
+
+            <input
+                type="password"
+
+                id="organizerPassword"
+
+                placeholder="Organizer password"
+
+                class="w-full bg-black/20
+                       border border-white/10
+                       rounded-lg px-4 py-2
+                       text-white mb-3
+                       focus:border-indigo-500
+                       focus:outline-none"
+            >
+
+
+            <button
+                onclick="organizerLogin()"
+
+                class="w-full bg-indigo-600
+                       hover:bg-indigo-500
+                       text-white py-2
+                       rounded-lg
+                       font-medium"
+            >
+
+                Login
+
+            </button>
+
+
+            <p
+                id="loginMsg"
+
+                class="text-sm text-center
+                       mt-3 min-h-[20px]"
+            ></p>
+
+        </section>
+
+
+
+        <!-- ========================================================
+             CREATE EVENT
+        ======================================================== -->
+
+        <section
+            id="createEventSection"
+
+            class="hidden bg-white/5
+                   border border-white/10
+                   p-6 rounded-2xl
+                   shadow-xl"
+        >
+
+
+            <h2
+                class="text-lg font-medium
+                       text-white mb-4
+                       flex items-center gap-2"
+            >
+
+                📅 Create New Event
+
+            </h2>
+
+
+            <div class="space-y-3">
+
+
+                <input
+                    type="text"
+
+                    id="eventName"
+
+                    maxlength="100"
+
+                    placeholder="Event Name (e.g. TechCon 2026)"
+
+                    class="w-full bg-black/20
+                           border border-white/10
+                           rounded-lg px-4 py-2
+                           text-white
+                           focus:border-emerald-500
+                           focus:outline-none"
+                >
+
+
+                <div class="flex gap-3">
+
+
+                    <input
+                        type="date"
+
+                        id="eventDate"
+
+                        class="w-full bg-black/20
+                               border border-white/10
+                               rounded-lg px-4 py-2
+                               text-sm text-gray-400
+                               focus:border-emerald-500
+                               focus:outline-none"
+                    >
+
+
+                    <input
+                        type="number"
+
+                        id="eventCap"
+
+                        min="1"
+
+                        placeholder="Capacity"
+
+                        class="w-full bg-black/20
+                               border border-white/10
+                               rounded-lg px-4 py-2
+                               text-sm text-white
+                               focus:border-emerald-500
+                               focus:outline-none"
+                    >
+
+                </div>
+
+
+                <button
+                    onclick="createNewEvent()"
+
+                    class="w-full bg-emerald-600
+                           hover:bg-emerald-500
+                           text-white py-2
+                           rounded-lg font-medium
+                           transition active:scale-95"
+                >
+
+                    Launch Event
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ========================================================
+             LIVE DASHBOARD
+        ======================================================== -->
+
+        <section
+            id="dashboardSection"
+
+            class="hidden bg-white/5
+                   border border-white/10
+                   p-6 rounded-2xl
+                   shadow-xl"
+        >
+
+
+            <div
+                class="flex justify-between
+                       items-center mb-4"
+            >
+
+                <h2
+                    class="text-lg font-medium
+                           text-white"
+                >
+                    Live Control Center
+                </h2>
+
+
+                <span
+                    class="text-[10px]
+                           bg-red-500/20
+                           text-red-400
+                           border border-red-500/30
+                           px-2 py-1 rounded
+                           uppercase font-bold
+                           animate-pulse"
+                >
+
+                    Live
+
+                </span>
+
+            </div>
+
+
+            <label
+                class="text-xs text-gray-400
+                       uppercase tracking-wider
+                       mb-1 block"
+            >
+
+                Monitoring Target:
+
+            </label>
+
+
+            <select
+                id="dashEventSelect"
+
+                onchange="fetchLiveStats()"
+
+                class="w-full bg-black/40
+                       border border-white/10
+                       rounded-lg px-4 py-2 mb-6
+                       text-white focus:outline-none
+                       focus:border-purple-500"
+            >
+
+                <option value="">
+                    Loading events...
+                </option>
+
+            </select>
+
+
+            <!-- Statistics -->
+
+            <div
+                class="grid grid-cols-2
+                       gap-4 mb-6"
+            >
+
+
+                <div
+                    class="bg-black/30 p-4
+                           rounded-xl
+                           border border-white/5
+                           text-center"
+                >
+
+                    <p
+                        id="statReg"
+
+                        class="text-3xl
+                               font-bold text-white"
+                    >
+                        -
+                    </p>
+
+
+                    <p
+                        class="text-xs text-gray-400 mt-1"
+                    >
+                        Total Registered
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="bg-black/30 p-4
+                           rounded-xl
+                           border border-emerald-500/20
+                           text-center"
+                >
+
+                    <p
+                        id="statCheck"
+
+                        class="text-3xl
+                               font-bold
+                               text-emerald-400"
+                    >
+                        -
+                    </p>
+
+
+                    <p
+                        class="text-xs text-gray-400 mt-1"
+                    >
+                        Checked In
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Export -->
+
+            <button
+                onclick="exportCSV()"
+
+                class="w-full bg-white/5
+                       hover:bg-white/10
+                       border border-white/10
+                       text-white py-2
+                       rounded-lg text-sm
+                       font-medium transition
+                       flex justify-center
+                       items-center gap-2"
+            >
+
+                ⬇️ Download Check-in CSV
+
+            </button>
+
+
+            <!-- Logout -->
+
+            <button
+                onclick="organizerLogout()"
+
+                class="w-full mt-3
+                       bg-red-600/20
+                       hover:bg-red-600/30
+                       border border-red-500/20
+                       text-red-400 py-2
+                       rounded-lg text-sm
+                       font-medium"
+            >
+
+                Logout
+
+            </button>
+
+        </section>
+
+    </div>
+
+
+
+    <!-- ============================================================
+         SCANNER
+    ============================================================ -->
+
+    <section
+        id="scannerSection"
+
+        class="hidden bg-white/5
+               border border-white/10
+               p-6 rounded-2xl
+               shadow-xl flex flex-col
+               h-full"
+    >
+
+
+        <h2
+            class="text-lg font-medium
+                   text-white mb-2"
+        >
+
+            📷 Entry Checkpoint
+
+        </h2>
+
+
+        <p
+            class="text-xs text-gray-400 mb-4"
+        >
+
+            Scans apply to the event selected
+            in the Control Center.
+
+        </p>
+
+
+        <!-- Camera -->
+
+        <div
+            id="reader"
+
+            class="w-full bg-black/40
+                   rounded-xl overflow-hidden
+                   aspect-square mb-6
+                   border border-white/5"
+        ></div>
+
+
+        <!-- Manual verification -->
+
+        <div class="mt-auto">
+
+
+            <label
+                class="text-xs font-semibold
+                       text-gray-500
+                       uppercase tracking-wider
+                       mb-2 block"
+            >
+
+                Manual Token Verification
+
+            </label>
+
+
+            <div class="flex gap-2">
+
+
+                <input
+                    type="text"
+
+                    id="manualScanInput"
+
+                    placeholder="Paste token ID..."
+
+                    class="flex-1 bg-black/40
+                           border border-white/10
+                           rounded-lg px-4 py-2
+                           text-sm text-white
+                           focus:outline-none
+                           focus:border-indigo-500"
+                >
+
+
+                <button
+                    onclick="manualProcessScan()"
+
+                    class="bg-indigo-600
+                           hover:bg-indigo-500
+                           px-4 rounded-lg
+                           text-sm font-medium
+                           transition active:scale-95"
+                >
+
+                    Verify
+
+                </button>
+
+            </div>
+
+
+            <div
+                id="scanMsg"
+
+                class="mt-4 font-medium
+                       text-center text-sm
+                       min-h-[24px]"
+            ></div>
+
+        </div>
+
+    </section>
+
+</div>
+
+</main>
+
+
+
+<!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+
+<script>
+
+
+// ================================================================
+// GLOBAL VARIABLES
+// ================================================================
+
+let scanner = null;
+
+let scannerInitialized = false;
+
+
+// ================================================================
+// PAGE LOAD
+// ================================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async function () {
+
+        // IMPORTANT:
+        // This is all we do initially.
+        //
+        // Attendee is public.
+        // Organizer login happens only when
+        // Organizer is selected.
+
+        await loadEvents();
+
+    }
+);
+
+
+// ================================================================
+// ROLE SWITCHING
+// ================================================================
+
+async function toggleRoles() {
+
+    const role =
+        document.getElementById(
+            "roleSelector"
+        ).value;
+
+
+    // ------------------------------------------------------------
+    // ATTENDEE
+    // ------------------------------------------------------------
+
+    if (role === "attendee") {
+
+        document.getElementById(
+            "attendeeView"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "organizerView"
+        ).classList.add(
+            "hidden"
+        );
+
+
+        return;
+
+    }
+
+
+    // ------------------------------------------------------------
+    // ORGANIZER
+    // ------------------------------------------------------------
+
+    document.getElementById(
+        "attendeeView"
+    ).classList.add(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "organizerView"
+    ).classList.remove(
+        "hidden"
+    );
+
+
+    await checkOrganizerStatus();
+
+}
+
+
+// ================================================================
+// LOAD EVENTS
+// ================================================================
+
+async function loadEvents(
+    autoSelectId = null
+) {
+
+    try {
+
+        const response =
+            await fetch(
+                "/events?t=" +
+                Date.now()
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Failed to load events."
+            );
+
+        }
+
+
+        const events =
+            await response.json();
+
+
+        const regDropdown =
+            document.getElementById(
+                "regEventSelect"
+            );
+
+
+        const dashDropdown =
+            document.getElementById(
+                "dashEventSelect"
+            );
+
+
+        // Clear old options.
+
+        regDropdown.innerHTML = "";
+
+        dashDropdown.innerHTML = "";
+
+
+        // --------------------------------------------------------
+        // No events
+        // --------------------------------------------------------
+
+        if (
+            !Array.isArray(events) ||
+            events.length === 0
+        ) {
+
+            const regOption =
+                document.createElement(
+                    "option"
+                );
+
+            regOption.value = "";
+
+            regOption.textContent =
+                "No events available";
+
+
+            const dashOption =
+                regOption.cloneNode(
+                    true
+                );
+
+
+            regDropdown.appendChild(
+                regOption
+            );
+
+            dashDropdown.appendChild(
+                dashOption
+            );
+
+
+            return;
+
+        }
+
+
+        // --------------------------------------------------------
+        // Add events
+        // --------------------------------------------------------
+
+        events.forEach(
+            function (event) {
+
+                const regOption =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                regOption.value =
+                    String(event.id);
+
+
+                regOption.textContent =
+                    event.name +
+                    " (Cap: " +
+                    event.capacity +
+                    ")";
+
+
+                const dashOption =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                dashOption.value =
+                    String(event.id);
+
+
+                dashOption.textContent =
+                    event.name +
+                    " (Cap: " +
+                    event.capacity +
+                    ")";
+
+
+                regDropdown.appendChild(
+                    regOption
+                );
+
+
+                dashDropdown.appendChild(
+                    dashOption
+                );
+
+            }
+        );
+
+
+        // --------------------------------------------------------
+        // Select event
+        // --------------------------------------------------------
+
+        if (
+            autoSelectId !== null
+        ) {
+
+            const selected =
+                String(
+                    autoSelectId
+                );
+
+
+            regDropdown.value =
+                selected;
+
+
+            dashDropdown.value =
+                selected;
+
+        }
+
+        else {
+
+            regDropdown.value =
+                String(
+                    events[0].id
+                );
+
+
+            dashDropdown.value =
+                String(
+                    events[0].id
+                );
+
+        }
+
+
+        // Update dashboard if organizer
+        // is already logged in.
+
+        if (
+            document.getElementById(
+                "roleSelector"
+            ).value === "organizer"
+        ) {
+
+            await fetchLiveStats();
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Failed to load events:",
+            error
+        );
+
+
+        const regDropdown =
+            document.getElementById(
+                "regEventSelect"
+            );
+
+
+        regDropdown.innerHTML =
+            "<option value=''>" +
+            "Failed to load events" +
+            "</option>";
+
+    }
+
+}
+
+
+// ================================================================
+// CHECK ORGANIZER LOGIN
+// ================================================================
+
+async function checkOrganizerStatus() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/organizer_status"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            data.authenticated
+        ) {
+
+            showOrganizerDashboard();
+
+        }
+
+        else {
+
+            showOrganizerLogin();
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not check organizer status:",
+            error
+        );
+
+
+        showOrganizerLogin();
+
+    }
+
+}
+
+
+// ================================================================
+// SHOW ORGANIZER LOGIN
+// ================================================================
+
+function showOrganizerLogin() {
+
+    document.getElementById(
+        "loginSection"
+    ).classList.remove(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "createEventSection"
+    ).classList.add(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "dashboardSection"
+    ).classList.add(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "scannerSection"
+    ).classList.add(
+        "hidden"
+    );
+
+}
+
+
+// ================================================================
+// SHOW ORGANIZER DASHBOARD
+// ================================================================
+
+function showOrganizerDashboard() {
+
+    document.getElementById(
+        "loginSection"
+    ).classList.add(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "createEventSection"
+    ).classList.remove(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "dashboardSection"
+    ).classList.remove(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "scannerSection"
+    ).classList.remove(
+        "hidden"
+    );
+
+
+    initScannerSafe();
+
+
+    fetchLiveStats();
+
+}
+
+
+// ================================================================
+// ORGANIZER LOGIN
+// ================================================================
+
+async function organizerLogin() {
+
+    const password =
+        document.getElementById(
+            "organizerPassword"
+        ).value;
+
+
+    const message =
+        document.getElementById(
+            "loginMsg"
+        );
+
+
+    if (!password) {
+
+        message.innerText =
+            "Please enter your password.";
+
+        message.className =
+            "text-sm text-center mt-3 " +
+            "min-h-[20px] text-red-400";
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/organizer_login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        password:
+                            password
+                    })
                 }
-                
-                fetchLiveStats();
-            } catch (err) {
-                console.error("Failed to load events:", err);
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            message.innerText =
+                data.error ||
+                "Login failed.";
+
+            message.className =
+                "text-sm text-center mt-3 " +
+                "min-h-[20px] text-red-400";
+
+            return;
+
+        }
+
+
+        message.innerText =
+            "Login successful.";
+
+        message.className =
+            "text-sm text-center mt-3 " +
+            "min-h-[20px] text-emerald-400";
+
+
+        document.getElementById(
+            "organizerPassword"
+        ).value = "";
+
+
+        showOrganizerDashboard();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        message.innerText =
+            "Could not connect to server.";
+
+        message.className =
+            "text-sm text-center mt-3 " +
+            "min-h-[20px] text-red-400";
+
+    }
+
+}
+
+
+// ================================================================
+// ORGANIZER LOGOUT
+// ================================================================
+
+async function organizerLogout() {
+
+    try {
+
+        await fetch(
+            "/organizer_logout",
+            {
+                method: "POST"
             }
+        );
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+    }
+
+
+    // Clear scanner.
+
+    if (scanner) {
+
+        try {
+
+            await scanner.clear();
+
+        } catch (error) {
+
+            console.warn(
+                "Scanner cleanup error:",
+                error
+            );
+
         }
 
-        function toggleRoles() {
-            const role = document.getElementById('roleSelector').value;
-            document.getElementById('attendeeView').classList.toggle('hidden', role !== 'attendee');
-            document.getElementById('organizerView').classList.toggle('hidden', role !== 'organizer');
-            if(role === 'organizer') fetchLiveStats();
-        }
+        scanner = null;
 
-        async function createNewEvent() {
-            const nameInput = document.getElementById('eventName').value;
-            const dateInput = document.getElementById('eventDate').value || new Date().toISOString().split('T')[0];
-            const capInput = document.getElementById('eventCap').value;
-            
-            if(!nameInput || !capInput) return alert("Please fill out event name and capacity.");
-            
-            const payload = { name: nameInput, date: dateInput, capacity: parseInt(capInput) };
-            
-            try {
-                const res = await fetch(window.location.origin + '/create_event', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json', 'X-Role': 'organizer' }, 
-                    body: JSON.stringify(payload) 
-                });
-                
-                const data = await res.json();
-                if(res.ok) {
-                    document.getElementById('eventName').value = '';
-                    document.getElementById('eventCap').value = '';
-                    document.getElementById('eventDate').value = '';
-                    await loadEvents(data.event_id); 
-                    alert(`Success! Event "${nameInput}" created and synchronized.`);
-                } else {
-                    alert("Server Error: " + (data.error || "Unknown error"));
+        scannerInitialized =
+            false;
+
+    }
+
+
+    showOrganizerLogin();
+
+}
+
+
+// ================================================================
+// CREATE EVENT
+// ================================================================
+
+async function createNewEvent() {
+
+    const name =
+        document.getElementById(
+            "eventName"
+        ).value.trim();
+
+
+    const date =
+        document.getElementById(
+            "eventDate"
+        ).value ||
+        new Date()
+            .toISOString()
+            .split("T")[0];
+
+
+    const capacity =
+        Number(
+            document.getElementById(
+                "eventCap"
+            ).value
+        );
+
+
+    if (!name) {
+
+        alert(
+            "Please enter an event name."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !Number.isInteger(
+            capacity
+        ) ||
+        capacity <= 0
+    ) {
+
+        alert(
+            "Capacity must be a positive whole number."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/create_event",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        name:
+                            name,
+
+                        date:
+                            date,
+
+                        capacity:
+                            capacity
+
+                    })
+
                 }
-            } catch (err) {
-                console.error(err);
-            }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                data.error ||
+                "Failed to create event."
+            );
+
+            return;
+
         }
 
-        async function registerAttendee() {
-            const eventId = document.getElementById('regEventSelect').value;
-            if(!eventId) return alert("Please select a valid event.");
-            
-            try {
-                const res = await fetch(window.location.origin + '/register', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({event_id: eventId}) 
-                });
-                const data = await res.json();
-                
-                if(res.ok && data.qr_token) {
-                    document.getElementById('qrContainer').classList.remove('hidden');
-                    document.getElementById('qrCode').innerHTML = ""; 
-                    new QRCode(document.getElementById('qrCode'), { text: data.qr_token, width: 140, height: 140 });
-                    document.getElementById('qrText').innerText = data.qr_token;
-                    loadEvents(eventId);
-                } else {
-                    alert(data.error || "Registration failed.");
+
+        document.getElementById(
+            "eventName"
+        ).value = "";
+
+
+        document.getElementById(
+            "eventCap"
+        ).value = "";
+
+
+        document.getElementById(
+            "eventDate"
+        ).value = "";
+
+
+        await loadEvents(
+            data.event_id
+        );
+
+
+        alert(
+            "Event created successfully!"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            "Network error. " +
+            "Could not connect to Flask."
+        );
+
+    }
+
+}
+
+
+// ================================================================
+// ATTENDEE REGISTRATION
+// ================================================================
+
+async function registerUser() {
+
+    const eventId =
+        document.getElementById(
+            "regEventSelect"
+        ).value;
+
+
+    if (!eventId) {
+
+        alert(
+            "Please select a valid event."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/register",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        event_id:
+                            eventId
+
+                    })
+
                 }
-            } catch (e) {
-                console.error(e);
-            }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                data.error ||
+                "Registration failed."
+            );
+
+            return;
+
         }
 
-        async function fetchLiveStats() {
-            const eventId = document.getElementById('dashEventSelect').value;
-            if(!eventId || document.getElementById('roleSelector').value !== 'organizer') return;
-            
-            try {
-                const res = await fetch(window.location.origin + `/live_stats/${eventId}`);
-                if(res.status === 200) {
-                    const data = await res.json();
-                    document.getElementById('statReg').innerText = `${data.registered} / ${data.capacity}`;
-                    document.getElementById('statCheck').innerText = data.checked_in;
+
+        if (
+            data.qr_token
+        ) {
+
+            displayQRCode(
+                data.qr_token
+            );
+
+
+            await loadEvents(
+                eventId
+            );
+
+        }
+
+        else {
+
+            alert(
+                "Registration failed."
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            "Network error. " +
+            "Could not connect to server."
+        );
+
+    }
+
+}
+
+
+// ================================================================
+// DISPLAY QR CODE
+// ================================================================
+
+function displayQRCode(
+    token
+) {
+
+    const container =
+        document.getElementById(
+            "qrContainer"
+        );
+
+
+    const qrCode =
+        document.getElementById(
+            "qrCode"
+        );
+
+
+    const qrText =
+        document.getElementById(
+            "qrText"
+        );
+
+
+    container.classList.remove(
+        "hidden"
+    );
+
+
+    qrCode.innerHTML = "";
+
+
+    new QRCode(
+
+        qrCode,
+
+        {
+
+            text:
+                token,
+
+            width:
+                160,
+
+            height:
+                160,
+
+            colorDark:
+                "#000000",
+
+            colorLight:
+                "#ffffff"
+
+        }
+
+    );
+
+
+    qrText.innerText =
+        token;
+
+}
+
+
+// ================================================================
+// LIVE STATS
+// ================================================================
+
+async function fetchLiveStats() {
+
+    const role =
+        document.getElementById(
+            "roleSelector"
+        ).value;
+
+
+    if (
+        role !== "organizer"
+    ) {
+
+        return;
+
+    }
+
+
+    const eventId =
+        document.getElementById(
+            "dashEventSelect"
+        ).value;
+
+
+    if (!eventId) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/live_stats/" +
+                eventId
+            );
+
+
+        if (
+            response.status === 401
+        ) {
+
+            return;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            console.error(
+                data.error ||
+                "Failed to get statistics."
+            );
+
+            return;
+
+        }
+
+
+        document.getElementById(
+            "statReg"
+        ).innerText =
+
+            data.registered +
+            " / " +
+            data.capacity;
+
+
+        document.getElementById(
+            "statCheck"
+        ).innerText =
+            data.checked_in;
+
+
+    } catch (error) {
+
+        console.error(
+            "Live stats error:",
+            error
+        );
+
+    }
+
+}
+
+
+// Refresh statistics every 3 seconds.
+
+setInterval(
+    fetchLiveStats,
+    3000
+);
+
+
+// ================================================================
+// MANUAL SCAN
+// ================================================================
+
+function manualProcessScan() {
+
+    const token =
+        document.getElementById(
+            "manualScanInput"
+        ).value.trim();
+
+
+    if (!token) {
+
+        return;
+
+    }
+
+
+    processScan(
+        token
+    );
+
+}
+
+
+// ================================================================
+// PROCESS SCAN
+// ================================================================
+
+async function processScan(
+    token
+) {
+
+    token =
+        token.trim();
+
+
+    if (!token) {
+
+        return;
+
+    }
+
+
+    const eventId =
+        document.getElementById(
+            "dashEventSelect"
+        ).value;
+
+
+    if (!eventId) {
+
+        showScanMessage(
+            "Please select an event first.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/scan",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        qr_token:
+                            token,
+
+                        event_id:
+                            eventId
+
+                    })
+
                 }
-            } catch(e) {
-                console.error(e);
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 200
+        ) {
+
+            showScanMessage(
+                "✅ " +
+                data.success,
+                "success"
+            );
+
+        }
+
+        else if (
+            response.status === 409
+        ) {
+
+            showScanMessage(
+                "⚠️ " +
+                data.error,
+                "warning"
+            );
+
+        }
+
+        else {
+
+            showScanMessage(
+                "❌ " +
+                (
+                    data.error ||
+                    "Access denied."
+                ),
+                "error"
+            );
+
+        }
+
+
+        document.getElementById(
+            "manualScanInput"
+        ).value = "";
+
+
+        await fetchLiveStats();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        showScanMessage(
+            "❌ Network error.",
+            "error"
+        );
+
+    }
+
+}
+
+
+// ================================================================
+// SCAN MESSAGE
+// ================================================================
+
+function showScanMessage(
+    message,
+    type
+) {
+
+    const box =
+        document.getElementById(
+            "scanMsg"
+        );
+
+
+    box.innerText =
+        message;
+
+
+    if (
+        type === "success"
+    ) {
+
+        box.className =
+            "mt-4 font-semibold " +
+            "text-emerald-400 " +
+            "bg-emerald-400/10 " +
+            "py-1 rounded text-center";
+
+    }
+
+    else if (
+        type === "warning"
+    ) {
+
+        box.className =
+            "mt-4 font-semibold " +
+            "text-amber-400 " +
+            "bg-amber-400/10 " +
+            "py-1 rounded text-center";
+
+    }
+
+    else {
+
+        box.className =
+            "mt-4 font-semibold " +
+            "text-red-400 " +
+            "bg-red-400/10 " +
+            "py-1 rounded text-center";
+
+    }
+
+
+    setTimeout(
+        function () {
+
+            box.innerText =
+                "";
+
+        },
+        3000
+    );
+
+}
+
+
+// ================================================================
+// QR SCANNER
+// ================================================================
+
+function initScannerSafe() {
+
+    // Prevent multiple scanners.
+
+    if (
+        scannerInitialized
+    ) {
+
+        return;
+
+    }
+
+
+    const reader =
+        document.getElementById(
+            "reader"
+        );
+
+
+    if (!reader) {
+
+        return;
+
+    }
+
+
+    try {
+
+        scanner =
+            new Html5QrcodeScanner(
+
+                "reader",
+
+                {
+
+                    fps:
+                        5,
+
+                    qrbox:
+                        200
+
+                },
+
+                false
+
+            );
+
+
+        scanner.render(
+
+            function (
+                decodedText
+            ) {
+
+                processScan(
+                    decodedText
+                );
+
+            },
+
+
+            function () {
+
+                // Ignore normal scanner errors.
+
             }
-        }
-        setInterval(fetchLiveStats, 3000);
 
-        async function fetchAIInsights() {
-            const eventId = document.getElementById('dashEventSelect').value;
-            if(!eventId) return alert("Select an event target first.");
-            
-            const outBox = document.getElementById('aiOutputBox');
-            outBox.innerHTML = "✨ Analyzing live database telemetry and arrival pacing...";
-            
-            try {
-                const res = await fetch(window.location.origin + `/ai_insights/${eventId}`, { headers: getHeaders() });
-                const data = await res.json();
-                if(res.ok) {
-                    outBox.innerHTML = data.analysis.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
-                } else {
-                    outBox.innerHTML = "❌ Failed to generate insights. Ensure organizer role is active.";
-                }
-            } catch(e) {
-                outBox.innerHTML = "❌ Connection error with AI telemetry server.";
-            }
+        );
+
+
+        scannerInitialized =
+            true;
+
+
+    } catch (error) {
+
+        console.warn(
+            "Camera unavailable.",
+            error
+        );
+
+    }
+
+}
+
+
+// ================================================================
+// CSV EXPORT
+// ================================================================
+
+async function exportCSV() {
+
+    const eventId =
+        document.getElementById(
+            "dashEventSelect"
+        ).value;
+
+
+    if (!eventId) {
+
+        alert(
+            "Select an event first."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/export/" +
+                eventId
+            );
+
+
+        if (!response.ok) {
+
+            const data =
+                await response
+                    .json()
+                    .catch(
+                        function () {
+                            return {};
+                        }
+                    );
+
+
+            throw new Error(
+                data.error ||
+                "CSV export failed."
+            );
+
         }
 
-        async function processScan(token) {
-            if(!token) return;
-            try {
-                const res = await fetch(window.location.origin + '/scan', { method: 'POST', headers: getHeaders(), body: JSON.stringify({qr_token: token}) });
-                const data = await res.json();
-                const msgBox = document.getElementById('scanMsg');
-                
-                if(res.status === 200) { msgBox.className = "mt-2 font-semibold text-emerald-400 bg-emerald-400/10 py-1 rounded text-center text-xs"; msgBox.innerText = `✅ ${data.success}`; }
-                else if(res.status === 409) { msgBox.className = "mt-2 font-semibold text-amber-400 bg-amber-400/10 py-1 rounded text-center text-xs"; msgBox.innerText = `⚠️ ${data.error}`; }
-                else { msgBox.className = "mt-2 font-semibold text-red-400 bg-red-400/10 py-1 rounded text-center text-xs"; msgBox.innerText = `❌ ${data.error || 'Access Denied'}`; }
-                
-                setTimeout(() => { msgBox.innerText = ""; document.getElementById('manualScanInput').value = ""; }, 3000);
-                fetchLiveStats();
-            } catch(e) {
-                console.error(e);
-            }
-        }
 
-        function exportCSV() {
-            const eventId = document.getElementById('dashEventSelect').value;
-            if(!eventId) return alert("Select an event first.");
-            fetch(window.location.origin + `/export/${eventId}`, { headers: getHeaders() }).then(res => {
-                if(res.status === 403) throw new Error("Access Denied");
-                return res.blob();
-            }).then(blob => {
-                const a = document.createElement('a'); a.href = window.URL.createObjectURL(blob);
-                a.download = `event_export_${eventId}.csv`; document.body.appendChild(a); a.click(); a.remove();
-            }).catch(err => alert(err.message));
-        }
+        const blob =
+            await response.blob();
 
-        let scanner;
-        function initScannerSafe() {
-            try {
-                scanner = new Html5QrcodeScanner("reader", { fps: 5, qrbox: 180 }, false);
-                scanner.render(async (decodedText) => { processScan(decodedText); }, () => {});
-            } catch(e) {}
-        }
-    </script>
+
+        const url =
+            window.URL.createObjectURL(
+                blob
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            "event_export_" +
+            eventId +
+            ".csv";
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
+
+
+        window.URL.revokeObjectURL(
+            url
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "CSV export failed."
+        );
+
+    }
+
+}
+
+</script>
+
+
 </body>
+
 </html>
